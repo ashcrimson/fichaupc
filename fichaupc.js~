@@ -1,0 +1,258 @@
+ function isEmpty(value) {
+  return typeof value == 'string' && !value.trim() || typeof value == 'undefined' || value === null;
+}
+function toggletabenm(obj){
+  var id=obj.id.substr(3);
+  $( "#"+id ).toggle();
+  if ($("#"+id).is(':visible')) {
+    $("#"+obj.id).html('Ocultar Nueva Enmienda');
+  }
+  else{
+	$("#"+obj.id).html('Mostrar Nueva Enmienda');
+  }
+  $("#"+obj.id).button({icons: {primary: "ui-icon-pencil"}});
+}
+function habilita_obs(cod){
+  if ($('#ant_'+cod).is(':checked')) {
+	$('#obs_ant_'+cod).val('');
+	$('#obs_ant_'+cod).prop('disabled', false);
+	
+  }
+  else{
+	
+	$('#obs_ant_'+cod).val('');
+	$('#obs_ant_'+cod).prop('disabled', true);
+  }
+}
+function carga_slider() {
+    $.getJSON("Servicios/getFichas.php?estado=D&tipo_ficha="+$('#tf').val(),
+{
+format: "json"
+},
+function(json) {
+     
+     if(json!= null){
+	  var html="<ul>";
+	   if (json.rows.length > 0)
+     for(j=0;j< json.rows.length;j++){
+	    if (json.rows[j].tipo_usuario ==1)
+	    html=html+"<li><a href='#' onclick='ver_ficha(\""+json.rows[j].id_ficha+"\",\"\",\""+json.rows[j].tipo_ficha+"\",\"D\");$(\"#slider\").slideReveal(\"hide\");'>"+json.rows[j].nombre+" "+json.rows[j].apellido+"</a></li>";
+		else if (json.rows[j].tipo_usuario ==2)
+	    html=html+"<li><a href='#' onclick='ver_ficha(\""+json.rows[j].id_ficha+"\",\"\",\""+json.rows[j].tipo_ficha+"\",\"L\");$(\"#slider\").slideReveal(\"hide\");'>"+json.rows[j].nombre+" "+json.rows[j].apellido+"</a></li>";
+		
+     }
+     html=html+"</ul>";
+     $('#slider').html(html);
+    
+	 }
+	 }
+);
+}
+function onInit() {
+  
+  
+  $(document).mousemove(function(event){
+    
+    if(event.pageX < 20){
+       $('#slider').slideReveal("show");
+    }
+
+  });
+  $("#firmardoc").button({icons: {primary: "ui-icon-pencil"}}); 
+$("#firmardoc").click(function() {editNote('#list-fichas','C')});
+$("#verdoc").button({icons: {primary: "ui-icon-print"}}); 
+$("#verdoc").click(function() {editNote('#list-fichas','L')});
+$("#printdoc").button({icons: {primary: "ui-icon-print"}}); 
+$("#printdoc").click(function() {editNote('#list-fichas','H')});
+$('#slider').slideReveal({
+
+  push: false,
+  overlay: true
+});
+
+	if($('#conectado').attr("value") =="S"){
+	  carga_slider();
+        
+	         $("#list-fichas").jqGrid({
+	    url:'Servicios/getFichas.php',
+		height:400,
+            width:1200,
+	    datatype: 'json', loadonce: false,
+	    colNames:['Run','','Nombres','Apellidos','Fecha Ingreso UCi','Tipo Ficha','Estado','',''],
+	    colModel :[
+			 {name:'run', index:'run', width:30, align:'center',editable:false},	   
+              {name:'id_ficha', index:'id_ficha', width:10, align:'center',editable:false,hidden:true}, 
+	      {name:'nombre', index:'nombre', width:50, align:'center',editable:false},
+              {name:'apellido', index:'apellido', width:50, align:'center',editable:false},
+              {name:'fec_ing_uci', index:'fec_ing_uci', width:150, align:'center',editable:false},
+              {name:'desc_tipo_ficha', index:'desc_tipo_ficha', width:50, align:'center',editable:true},
+              {name:'estado', index:'estado', width:50, align:'center',editable:true},
+              {name:'tipo_ficha', index:'tipo_ficha', width:10,hidden:true, align:'center',editable:false},
+			  {name:'cod_estado', index:'tipo_ficha', width:10,hidden:true, align:'center',editable:false}
+	    ],jsonReader: { repeatitems : false, id: "0" }, 
+	   rowNum:500, rowList:[100,200,300], sortname: 'id_ficha', viewrecords: true, sortorder: "desc", caption:"Fichas"
+	  });
+	
+	$("#btnEditFicha").button({icons: {primary: "ui-icon-pencil"}});  
+	$("#btnEditFicha").click(function() {editNote('#list-fichas','D')});
+        $("#btnAddFicha1").button({icons: {primary: "ui-icon-pencil"}});  
+	$("#btnAddFicha1").click(function() {ver_ficha("","",1,'D')});
+        $("#btnAddFicha2").button({icons: {primary: "ui-icon-pencil"}});  
+	$("#btnAddFicha2").click(function() {ver_ficha("","",2,'D')});
+        $("#btnAddFicha3").button({icons: {primary: "ui-icon-pencil"}});  
+	$("#btnAddFicha3").click(function() {ver_ficha("","",3,'D')});  
+	}else{
+          function showResponseLogin(responseText, statusText, xhr, $form)  { 
+                resp = JSON.parse(responseText);
+                if (resp.estado==1){
+                  window.location="index.php";
+                }  
+                else{ 
+                  alert(resp.mensaje);
+                } 
+            }  
+	    var optionslogin = { 
+                success:       showResponseLogin
+            };   
+                  
+            $('#form_login').ajaxForm(optionslogin);
+	    var loginDialog = $("#form_login");
+	    $(loginDialog).dialog({
+	        title: 'Iniciar Sesion',
+	        autoOpen: true,    
+                dialogbeforeclose: false,  
+	        closeOnEscape: false,
+	        draggable: false,
+	        width: 300,
+	        
+                minHeight: 50,
+	        modal: true,
+	        resizable: false,
+	        open: function(event, ui) {
+	            // scrollbar fix for IE
+	            $('body').css('overflow','hidden');
+                    $(".ui-dialog-titlebar-close").hide(); 
+	        },
+	        close: function() {
+	            // reset overflow
+	            $('body').css('overflow','auto');
+	        }
+	    }); // end of dialog
+
+	
+
+        }
+}
+
+
+function editNote(listId,accion) {
+
+	var selected = jQuery(listId).jqGrid('getGridParam','selrow');
+	if (selected == null) alert('Debe seleccionar una fila.');
+        if (selected != null){ 
+        var id_ficha = jQuery(listId).jqGrid('getCell',selected,'id_ficha');
+        var tipo_ficha = jQuery(listId).jqGrid('getCell',selected,'tipo_ficha');
+        var cod_estado = jQuery(listId).jqGrid('getCell',selected,'cod_estado');
+        if ((cod_estado!='D')&&(accion=='D')) {
+            alert('Usted no puede editar esta ficha porque no se encuentra en edicion');
+			return;
+        }
+		if ((cod_estado!='D')&&(accion=='C')) {
+            alert('Usted no puede cerrar esta ficha porque no se encuentra en edicion');
+			return;
+        }
+		if ((cod_estado!='C')&&(accion=='H')) {
+            alert('Usted no puede ver la hoja de trasalado si esta ficha porque no se encuentra cerrada');
+			return;
+        }
+		if (accion=='H') {
+           document.verhoja.id_ficha.value=id_ficha;
+		   document.verhoja.submit();
+        }
+		else{
+        ver_ficha(id_ficha,"",tipo_ficha,accion);
+		}
+        }        
+}
+
+
+function ver_ficha(id_ficha,options,tipo_ficha,accion){
+  if(id_ficha=="")
+   titulo="Creacion de Ficha";
+  else if(accion=='L')	
+   titulo="Lectura de Ficha";
+  else if(accion=='C')	
+   titulo="Cierre de Ficha";
+  else if(accion=='D')	
+   titulo="Edicion de Ficha";
+  
+  options = options || {};
+  $("#vwficha").remove();
+  var url="";
+  if (accion == "D") {
+    url='Vistas/Ficha.php?id_ficha='+id_ficha+'&tipo_ficha='+tipo_ficha;
+  }
+  else if (accion == "L") {
+    url='Vistas/FichaLectura.php?id_ficha='+id_ficha+'&tipo_ficha='+tipo_ficha;
+  }
+  else if (accion == "C") {
+    url='Vistas/FichaLectura.php?id_ficha='+id_ficha+'&tipo_ficha='+tipo_ficha+'&accion='+accion;
+  }
+  
+  var tag = $("<div id='vwficha'></div>"); //This tag will the hold the dialog content.
+  $.ajax({
+    url: url,
+    type: 'GET',
+    async:false,
+    success: function(data, textStatus, jqXHR) {
+      if(typeof data == "object" && data.html) { //response is assumed to be JSON
+        tag.html(data.html).dialog({modal: options.modal,position:[300,100], title: titulo,width:'100%',height:'600',resizable:false,close: function(event, ui) {  $("#vwficha").remove(); }}).dialog('open');
+      } else { //response is assumed to be HTML
+        tag.html(data).dialog({modal: options.modal,position:[300,100], title: titulo,width:'100%',height:'600',resizable:false,close: function(event, ui) {  $("#vwficha").remove(); }}).dialog('open');
+      }
+      $.isFunction(options.success) && (options.success)(data, textStatus, jqXHR);
+    }
+  });
+}
+
+function inhiberadio(o){
+ /* if(o.readOnly){
+    
+    return false;
+  }
+  else
+    return true;*/
+   return true;
+}
+function getRutDv(T){var M=0,S=1;for(;T;T=Math.floor(T/10))
+	S=(S+T%10*(9-M++%6))%11;return S?S-1:'K';}
+function isInteger (n) {
+	//return n===+n && n===(n|0);
+	
+	var er = /^[0-9]+$/;
+	return ( er.test(n) ) ? true : false;
+}
+function valida_buscar(f){
+   if(f.run.value ==""){
+    alert('El rut a buscar no puede ser nulo'); 
+    return false;
+   }
+   if(!isInteger(f.run.value)){
+    alert('El rut a buscar debe ser un numero'); 
+    return false;
+   }
+
+   if(f.dv_run.value ==""){
+    alert('El digito verificador del run a buscar no puede ser nulo'); 
+    return false;
+   } 
+   if ( getRutDv(f.run.value) != f.dv_run.value.toUpperCase()){
+      alert('El run es incorrecto'); 
+      return false;
+   }
+   return true;
+}
+
+
+
+$(document).ready(onInit);
